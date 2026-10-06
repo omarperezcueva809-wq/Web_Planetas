@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // 🚀 Pantalla de Carga de Exactamente 6 Segundos
-  const loaderScreen = document.getElementById('loaderScreen');
-  const loaderBar = document.getElementById('loaderBar');
-  const loaderText = document.getElementById('loaderText');
+  // 🚀 Pantalla de Carga de Exactamente 6 Segundos (Forzando ocultado absoluto)
+  const loaderScreen = document.getElementById('loaderScreen') || document.querySelector('.loader-screen');
+  const loaderBar = document.getElementById('loaderBar') || document.querySelector('.loader-fill');
+  const loaderText = document.getElementById('loaderText') || document.querySelector('.loader-footer-status');
 
   const totalDuration = 6000;
   const intervalTime = 60;
@@ -18,7 +18,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (elapsed >= totalDuration) {
       clearInterval(loadInterval);
-      if (loaderScreen) loaderScreen.classList.add('fade-out');
+      if (loaderScreen) {
+        loaderScreen.classList.add('fade-out');
+        // Forzamos que se quite del DOM/pantalla a los 500ms para que nunca se quede trabada
+        setTimeout(() => {
+          loaderScreen.style.display = 'none';
+        }, 500);
+      }
     }
   }, intervalTime);
 
@@ -33,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   window.addEventListener('resize', resizeCanvas);
   window.addEventListener('orientationchange', () => {
-    setTimeout(resizeCanvas, 300); // Evita fallos al rotar el celular
+    setTimeout(resizeCanvas, 300);
   });
   resizeCanvas();
 
@@ -337,7 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
     requestAnimationFrame(render);
   }
 
-  // 🎛️ Controles con comprobación de seguridad
+  // 🎛️ Controles
   const planetSelect = document.getElementById('planetSelect');
   const speedRange = document.getElementById('speedRange');
   const speedVal = document.getElementById('speedVal');
@@ -378,17 +384,4 @@ document.addEventListener('DOMContentLoaded', () => {
   if (pausePlayBtn) {
     pausePlayBtn.addEventListener('click', () => {
       isRunning = !isRunning;
-      pausePlayBtn.textContent = isRunning ? '⏸️ Pausa' : '▶ Reanudar';
-      pausePlayBtn.classList.toggle('active', isRunning);
-    });
-  }
-
-  if (toggleOrbitsBtn) {
-    toggleOrbitsBtn.addEventListener('click', () => {
-      showOrbits = !showOrbits;
-      toggleOrbitsBtn.textContent = showOrbits ? '🌐 Órbitas' : '🌐 Ocultas';
-      toggleOrbitsBtn.classList.toggle('active', showOrbits);
-    });
-  }
-
-  let is
+      pausePlayBtn.
