@@ -1,32 +1,36 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // 🚀 Pantalla de Carga de Exactamente 6 Segundos (Forzando ocultado absoluto)
+  // 🚀 Pantalla de Carga ultra rápida (0.5s) para que nunca se quede trabada
   const loaderScreen = document.getElementById('loaderScreen') || document.querySelector('.loader-screen');
   const loaderBar = document.getElementById('loaderBar') || document.querySelector('.loader-fill');
   const loaderText = document.getElementById('loaderText') || document.querySelector('.loader-footer-status');
 
-  const totalDuration = 6000;
-  const intervalTime = 60;
+  const totalDuration = 500; // Reducido a medio segundo para que cargue al toque
+  const intervalTime = 50;
   let elapsed = 0;
 
   const loadInterval = setInterval(() => {
     elapsed += intervalTime;
     let percentage = Math.min(Math.floor((elapsed / totalDuration) * 100), 100);
-    let secondsPassed = (elapsed / 1000).toFixed(1);
     
     if (loaderBar) loaderBar.style.width = `${percentage}%`;
-    if (loaderText) loaderText.textContent = `Estableciendo enlace orbital (${secondsPassed}s / 6s)...`;
+    if (loaderText) loaderText.textContent = `Enlace orbital establecido...`;
 
     if (elapsed >= totalDuration) {
       clearInterval(loadInterval);
       if (loaderScreen) {
-        loaderScreen.classList.add('fade-out');
-        // Forzamos que se quite del DOM/pantalla a los 500ms para que nunca se quede trabada
-        setTimeout(() => {
-          loaderScreen.style.display = 'none';
-        }, 500);
+        loaderScreen.style.opacity = '0';
+        loaderScreen.style.visibility = 'hidden';
+        loaderScreen.style.display = 'none'; // Se elimina visualmente al instante
       }
     }
   }, intervalTime);
+
+  // Fallback de seguridad por si acaso: se oculta a la fuerza a los 1 segundo pase lo que pase
+  setTimeout(() => {
+    if (loaderScreen && loaderScreen.style.display !== 'none') {
+      loaderScreen.style.display = 'none';
+    }
+  }, 1000);
 
   // 🌌 Renderizado con Datos Enriquecidos
   const canvas = document.getElementById('solarCanvas');
@@ -384,4 +388,44 @@ document.addEventListener('DOMContentLoaded', () => {
   if (pausePlayBtn) {
     pausePlayBtn.addEventListener('click', () => {
       isRunning = !isRunning;
-      pausePlayBtn.
+      pausePlayBtn.textContent = isRunning ? '⏸️ Pausa' : '▶ Reanudar';
+      pausePlayBtn.classList.toggle('active', isRunning);
+    });
+  }
+
+  if (toggleOrbitsBtn) {
+    toggleOrbitsBtn.addEventListener('click', () => {
+      showOrbits = !showOrbits;
+      toggleOrbitsBtn.textContent = showOrbits ? '🌐 Órbitas' : '🌐 Ocultas';
+      toggleOrbitsBtn.classList.toggle('active', showOrbits);
+    });
+  }
+
+  let isDarkMode = true;
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', () => {
+      isDarkMode = !isDarkMode;
+      document.body.classList.toggle('light-mode', !isDarkMode);
+      themeToggleBtn.textContent = isDarkMode ? '🌙 Tema' : '☀️ Tema';
+    });
+  }
+
+  canvas.addEventListener('pointerdown', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
+
+    let clickedPlanet = null;
+    celestialObjects.forEach(p => {
+      if (p.id === 'sun') {
+        const dist = Math.hypot(clickX - canvas.width/2, clickY - canvas.height/2);
+        if (dist < p.radius * 1.6) clickedPlanet = p;
+        return;
+      }
+      const dist = Math.hypot(clickX - p.currentX, clickY - p.currentY);
+      if (dist < p.radius + 20) {
+        clickedPlanet = p;
+      }
+    });
+
+    if (
