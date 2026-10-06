@@ -1,38 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // 🚀 Pantalla de Carga ultra rápida (0.5s) para que nunca se quede trabada
-  const loaderScreen = document.getElementById('loaderScreen') || document.querySelector('.loader-screen');
-  const loaderBar = document.getElementById('loaderBar') || document.querySelector('.loader-fill');
-  const loaderText = document.getElementById('loaderText') || document.querySelector('.loader-footer-status');
+  // 🚀 Ocultar pantalla de carga al instante para que nunca se quede pegada
+  const loaderScreen = document.getElementById('loaderScreen');
+  if (loaderScreen) {
+    loaderScreen.style.display = 'none';
+  }
 
-  const totalDuration = 500; // Reducido a medio segundo para que cargue al toque
-  const intervalTime = 50;
-  let elapsed = 0;
-
-  const loadInterval = setInterval(() => {
-    elapsed += intervalTime;
-    let percentage = Math.min(Math.floor((elapsed / totalDuration) * 100), 100);
-    
-    if (loaderBar) loaderBar.style.width = `${percentage}%`;
-    if (loaderText) loaderText.textContent = `Enlace orbital establecido...`;
-
-    if (elapsed >= totalDuration) {
-      clearInterval(loadInterval);
-      if (loaderScreen) {
-        loaderScreen.style.opacity = '0';
-        loaderScreen.style.visibility = 'hidden';
-        loaderScreen.style.display = 'none'; // Se elimina visualmente al instante
-      }
-    }
-  }, intervalTime);
-
-  // Fallback de seguridad por si acaso: se oculta a la fuerza a los 1 segundo pase lo que pase
-  setTimeout(() => {
-    if (loaderScreen && loaderScreen.style.display !== 'none') {
-      loaderScreen.style.display = 'none';
-    }
-  }, 1000);
-
-  // 🌌 Renderizado con Datos Enriquecidos
+  // 🌌 Renderizado del Simulador
   const canvas = document.getElementById('solarCanvas');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
@@ -428,4 +401,43 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    if (
+    if (clickedPlanet) {
+      selectedPlanetId = clickedPlanet.id;
+      if (planetSelect) planetSelect.value = clickedPlanet.id;
+      openTelemetryModal(clickedPlanet);
+    }
+  });
+
+  function openTelemetryModal(p) {
+    const setElemText = (id, text) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = text;
+    };
+
+    setElemText('modalTitle', p.name);
+    setElemText('modalDesc', p.desc);
+    setElemText('statDia', p.dia);
+    setElemText('statDist', p.dist);
+    setElemText('statOrb', p.orb);
+    setElemText('statTemp', p.temp);
+    setElemText('statComp', p.comp);
+    setElemText('statGrav', p.grav);
+    setElemText('statMoons', p.moons);
+
+    const infoModal = document.getElementById('infoModal');
+    if (infoModal) infoModal.classList.remove('hidden');
+  }
+
+  const openChartBtn = document.getElementById('openChartBtn');
+  const chartModal = document.getElementById('chartModal');
+  const closeChartModal = document.getElementById('closeChartModal');
+  const chartBarsContainer = document.getElementById('chartBarsContainer');
+
+  const maxAU = 31;
+  if (chartBarsContainer) {
+    celestialObjects.filter(p => p.id !== 'sun').forEach(p => {
+      const percentage = (p.au / maxAU) * 100;
+      const row = document.createElement('div');
+      row.className = 'chart-bar-row';
+      row.innerHTML = `
+        <div class="bar
