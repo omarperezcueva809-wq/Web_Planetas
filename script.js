@@ -13,17 +13,18 @@ document.addEventListener('DOMContentLoaded', () => {
     let percentage = Math.min(Math.floor((elapsed / totalDuration) * 100), 100);
     let secondsPassed = (elapsed / 1000).toFixed(1);
     
-    loaderBar.style.width = `${percentage}%`;
-    loaderText.textContent = `Estableciendo enlace orbital (${secondsPassed}s / 6s)...`;
+    if (loaderBar) loaderBar.style.width = `${percentage}%`;
+    if (loaderText) loaderText.textContent = `Estableciendo enlace orbital (${secondsPassed}s / 6s)...`;
 
     if (elapsed >= totalDuration) {
       clearInterval(loadInterval);
-      loaderScreen.classList.add('fade-out');
+      if (loaderScreen) loaderScreen.classList.add('fade-out');
     }
   }, intervalTime);
 
-  // 🌌 Renderizado con Datos Enriquecidos (Composición, Gravedad, Lunas)
+  // 🌌 Renderizado con Datos Enriquecidos
   const canvas = document.getElementById('solarCanvas');
+  if (!canvas) return;
   const ctx = canvas.getContext('2d');
 
   function resizeCanvas() {
@@ -31,6 +32,9 @@ document.addEventListener('DOMContentLoaded', () => {
     canvas.height = window.innerHeight;
   }
   window.addEventListener('resize', resizeCanvas);
+  window.addEventListener('orientationchange', () => {
+    setTimeout(resizeCanvas, 300); // Evita fallos al rotar el celular
+  });
   resizeCanvas();
 
   const celestialObjects = [
@@ -311,7 +315,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillStyle = 'rgba(255, 140, 0, 0.4)';
         ctx.fill();
       }
-
       if (p.hasMoon) {
         const moonDist = 32;
         const moonX = x + Math.cos(p.angle * 6) * moonDist;
@@ -334,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
     requestAnimationFrame(render);
   }
 
-  // 🎛️ Controles
+  // 🎛️ Controles con comprobación de seguridad
   const planetSelect = document.getElementById('planetSelect');
   const speedRange = document.getElementById('speedRange');
   const speedVal = document.getElementById('speedVal');
@@ -344,113 +347,48 @@ document.addEventListener('DOMContentLoaded', () => {
   const toggleOrbitsBtn = document.getElementById('toggleOrbitsBtn');
   const themeToggleBtn = document.getElementById('themeToggleBtn');
 
-  planetSelect.addEventListener('change', (e) => {
-    selectedPlanetId = e.target.value;
-    if (selectedPlanetId !== 'all') {
-      const p = celestialObjects.find(item => item.id === selectedPlanetId);
-      if (p) openTelemetryModal(p);
-    } else {
-      document.getElementById('infoModal').classList.add('hidden');
-    }
-  });
-
-  speedRange.addEventListener('input', (e) => {
-    speedMultiplier = parseFloat(e.target.value);
-    speedVal.textContent = `${speedMultiplier.toFixed(1)}x`;
-  });
-
-  tiltRange.addEventListener('input', (e) => {
-    const val = e.target.value;
-    tiltVal.textContent = `${val}°`;
-    tiltFactor = val / 100;
-  });
-
-  pausePlayBtn.addEventListener('click', () => {
-    isRunning = !isRunning;
-    pausePlayBtn.textContent = isRunning ? '⏸️ Pausa' : '▶ Reanudar';
-    pausePlayBtn.classList.toggle('active', isRunning);
-  });
-
-  toggleOrbitsBtn.addEventListener('click', () => {
-    showOrbits = !showOrbits;
-    toggleOrbitsBtn.textContent = showOrbits ? '🌐 Órbitas' : '🌐 Ocultas';
-    toggleOrbitsBtn.classList.toggle('active', showOrbits);
-  });
-
-  let isDarkMode = true;
-  themeToggleBtn.addEventListener('click', () => {
-    isDarkMode = !isDarkMode;
-    document.body.classList.toggle('light-mode', !isDarkMode);
-    themeToggleBtn.textContent = isDarkMode ? '🌙 Tema' : '☀️ Tema';
-  });
-
-  canvas.addEventListener('click', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const clickY = e.clientY - rect.top;
-
-    let clickedPlanet = null;
-    celestialObjects.forEach(p => {
-      if (p.id === 'sun') {
-        const dist = Math.hypot(clickX - canvas.width/2, clickY - canvas.height/2);
-        if (dist < p.radius * 1.6) clickedPlanet = p;
-        return;
-      }
-      const dist = Math.hypot(clickX - p.currentX, clickY - p.currentY);
-      if (dist < p.radius + 18) {
-        clickedPlanet = p;
+  if (planetSelect) {
+    planetSelect.addEventListener('change', (e) => {
+      selectedPlanetId = e.target.value;
+      if (selectedPlanetId !== 'all') {
+        const p = celestialObjects.find(item => item.id === selectedPlanetId);
+        if (p) openTelemetryModal(p);
+      } else {
+        const infoModal = document.getElementById('infoModal');
+        if (infoModal) infoModal.classList.add('hidden');
       }
     });
-
-    if (clickedPlanet) {
-      selectedPlanetId = clickedPlanet.id;
-      planetSelect.value = clickedPlanet.id;
-      openTelemetryModal(clickedPlanet);
-    }
-  });
-
-  function openTelemetryModal(p) {
-    document.getElementById('modalTitle').textContent = p.name;
-    document.getElementById('modalDesc').textContent = p.desc;
-    document.getElementById('statDia').textContent = p.dia;
-    document.getElementById('statDist').textContent = p.dist;
-    document.getElementById('statOrb').textContent = p.orb;
-    document.getElementById('statTemp').textContent = p.temp;
-    document.getElementById('statComp').textContent = p.comp;
-    document.getElementById('statGrav').textContent = p.grav;
-    document.getElementById('statMoons').textContent = p.moons;
-    document.getElementById('infoModal').classList.remove('hidden');
   }
 
-  const openChartBtn = document.getElementById('openChartBtn');
-  const chartModal = document.getElementById('chartModal');
-  const closeChartModal = document.getElementById('closeChartModal');
-  const chartBarsContainer = document.getElementById('chartBarsContainer');
+  if (speedRange) {
+    speedRange.addEventListener('input', (e) => {
+      speedMultiplier = parseFloat(e.target.value);
+      if (speedVal) speedVal.textContent = `${speedMultiplier.toFixed(1)}x`;
+    });
+  }
 
-  const maxAU = 31;
-  celestialObjects.filter(p => p.id !== 'sun').forEach(p => {
-    const percentage = (p.au / maxAU) * 100;
-    const row = document.createElement('div');
-    row.className = 'chart-bar-row';
-    row.innerHTML = `
-      <div class="bar-meta">
-        <span>${p.name}</span>
-        <span style="color: var(--primary-cyan);">${p.dist}</span>
-      </div>
-      <div class="bar-track">
-        <div class="bar-fill" style="width: ${Math.max(percentage, 3)}%;"></div>
-      </div>
-    `;
-    chartBarsContainer.appendChild(row);
-  });
+  if (tiltRange) {
+    tiltRange.addEventListener('input', (e) => {
+      const val = e.target.value;
+      if (tiltVal) tiltVal.textContent = `${val}°`;
+      tiltFactor = val / 100;
+    });
+  }
 
-  openChartBtn.addEventListener('click', () => chartModal.classList.remove('hidden'));
-  closeChartModal.addEventListener('click', () => chartModal.classList.add('hidden'));
-  document.getElementById('closeModal').addEventListener('click', () => {
-    document.getElementById('infoModal').classList.add('hidden');
-    planetSelect.value = 'all';
-    selectedPlanetId = 'all';
-  });
+  if (pausePlayBtn) {
+    pausePlayBtn.addEventListener('click', () => {
+      isRunning = !isRunning;
+      pausePlayBtn.textContent = isRunning ? '⏸️ Pausa' : '▶ Reanudar';
+      pausePlayBtn.classList.toggle('active', isRunning);
+    });
+  }
 
-  render();
-});
+  if (toggleOrbitsBtn) {
+    toggleOrbitsBtn.addEventListener('click', () => {
+      showOrbits = !showOrbits;
+      toggleOrbitsBtn.textContent = showOrbits ? '🌐 Órbitas' : '🌐 Ocultas';
+      toggleOrbitsBtn.classList.toggle('active', showOrbits);
+    });
+  }
+
+  let is
